@@ -3,6 +3,11 @@ from common.models import File
 import os
 
 class Command(BaseCommand):
+    """Upload command to load one or more file into the database.
+
+    Usage: python .\manage.py upload file1 file2 <...>
+    """
+
     help = 'Upload one or more Data Flow files to the database. Usage: python .\manage.py upload file1 file2 <...>'
 
     def add_arguments(self, parser):
@@ -17,14 +22,19 @@ class Command(BaseCommand):
             exit()
         
         for file in args:
-            self.stdout.write(f"{file}...")
-            filename = os.path.basename(file)
+            try:
+                self.stdout.write(f"{file}...")
+                filename = os.path.basename(file)
 
-            # Prevent multiple submissions of the same file
-            if not File.objects.filter(filename=filename).exists():
-                file_instance = File(filename = filename )
-                file_instance.file.save(os.path.basename(file), open(file, 'rb'))
-            else:
-                self.stdout.write(f"Duplicated file, will be ignored.")
-        
+                # Prevent multiple submissions of the same file
+                if not File.objects.filter(filename=filename).exists():
+                    file_instance = File(filename = filename )
+                    file_instance.file.save(os.path.basename(file), open(file, 'rb'))
+                else:
+                    self.stdout.write(f"Duplicated file, will be ignored.")
+            except NotImplementedError as e:
+                self.stdout.write(f"{str(e)}, will be uploaded but not processed")
+            except Exception as e:
+                raise
+            
         self.stdout.write(f"Upload completed.")
