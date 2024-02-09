@@ -11,7 +11,9 @@ class File(models.Model):
         file (file): Uploaded flow file
         flow (str): Flow file type (e.g. D0010, D0009)
     """
+    id = models.AutoField(primary_key=True)
     file = models.FileField(upload_to='uploads/', unique=True)
+    filename = models.CharField(max_length=200, blank=True)
 
 class Meter(models.Model):
     serial = models.CharField(max_length=10)
@@ -37,6 +39,6 @@ class Reading(models.Model):
     date = models.DateTimeField()
     
     # We CASCADE becase we don't want orphaned readings
-    file_id = models.ForeignKey(File, on_delete=models.CASCADE)
+    file_id = models.ForeignKey(File, on_delete=models.CASCADE,to_field="id")
     mpan_id = models.ForeignKey(Mpan, on_delete=models.CASCADE)
     meter_id = models.ForeignKey(Meter, on_delete=models.CASCADE)
