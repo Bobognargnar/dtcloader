@@ -1,8 +1,155 @@
 from django.test import TestCase
-
+from common.models import File
 from common.utils import DataFlowParserFactory,BaseDataFlowParser,D0010Parser
 from random import randint
 import uuid
+import os
+import shutil
+from django.db import IntegrityError
+
+class FileUploadTest(TestCase):
+    def test_upload(self):
+        file = ".\DTC5259515123502080915D0010.uff"
+        file_instance = File(filename = "DTC5259515123502080915D0010.uff" )
+        file_instance.file.save(os.path.basename(file), open(file, 'rb'))
+        pass
+
+    def test_upload_missing(self):
+        with self.assertRaises(FileNotFoundError) as context:
+            file = ".\\fantasy.uff"
+            file_instance = File(filename = "DTC5259515123502080915D0010.uff" )
+            file_instance.file.save(os.path.basename(file), open(file, 'rb'))
+        pass
+
+    def test_upload_invalid_extension(self):
+
+        file = ".\demo.bad"
+        if os.path.exists(file): os.remove(file)
+
+        shutil.copy2(".\DTC5259515123502080915D0010.uff", file)
+
+        with self.assertRaises(IntegrityError) as context:
+            file_instance = File(filename = "DTC5259515123502080915D0010.uff" )
+            file_instance.file.save(os.path.basename(file), open(file, 'rb'))
+            
+        if os.path.exists(file): os.remove(file)
+
+    def test_upload_invalid_flow(self):
+
+        file = ".\demo.uff"
+        if os.path.exists(file): os.remove(file)
+
+        shutil.copy2(".\DTC5259515123502080915D0010.uff", file)
+
+        with open(file, 'r+') as f:
+            content = f.read()
+            modified_content = content.replace('D0010002', 'D0020002')
+            f.seek(0)
+            f.write(modified_content)
+            f.truncate()
+
+        with self.assertRaises(NotImplementedError) as context:
+            file_instance = File(filename = "DTC5259515123502080915D0010.uff" )
+            file_instance.file.save(os.path.basename(file), open(file, 'rb'))
+            
+        #if os.path.exists(file): os.remove(file)
+
+class D0010Test(TestCase):
+
+    def test_parse_D0010(self):
+        # Receive D0010 flow file, parse content 
+        file_content = DataFlowFactory().get_data_flow("D0010")
+        
+        flow_parser = D0010Parser()
+        
+        data = flow_parser.process(file_content)
+
+        self.assertEqual(len(data),13)
+        pass
+
+    def test_parse_D0010_no_readings(self):
+        # Receive D0010 flow file with not readings
+        tmp_file_content = DataFlowFactory().get_data_flow("D0010")
+        file_content = []
+        for row in tmp_file_content:
+            if row[0:3]!="030":
+                file_content.append(row)
+        
+        flow_parser = DataFlowParserFactory().get_parser(file_content)        
+        flow_parser = D0010Parser()
+        data = flow_parser.process(file_content)
+        
+        self.assertListEqual(data,[])
+        pass
+
+    def test_parse_D0010_bad_readings(self):
+        # Receive D0010 flow file with bad or malformed readings
+        tmp_file_content = DataFlowFactory().get_data_flow("D0010")
+        file_content = []
+
+        bad_reading = []
+        for row in tmp_file_content:
+            if row[0:3]=="030" and len(bad_reading)<2:
+                row = row[0:3] + "|random_stuff|other_problem|"
+                bad_reading.append(row)
+            file_content.append(row)
+        
+        flow_parser = DataFlowParserFactory().get_parser(file_content)        
+        flow_parser = D0010Parser()
+        data = flow_parser.process(file_content)
+        
+        for bad in bad_reading:
+            for reading in data:
+                self.assertNotEqual(reading['value'],bad[3])
+                self.assertNotEqual(reading['raw_date'],bad[2])
+
+        pass
+
+    def test_parse_D0010_bad_meter(self):
+        # Receive D0010 flow file with bad or malformed meters
+        tmp_file_content = DataFlowFactory().get_data_flow("D0010")
+        file_content = []
+        for row in tmp_file_content:
+            if row[0:3]=="028":
+                row = row[0:3] + "||other_problem|"
+            file_content.append(row)
+        
+        flow_parser = DataFlowParserFactory().get_parser(file_content)        
+        flow_parser = D0010Parser()
+        data = flow_parser.process(file_content)
+        
+        self.assertListEqual(data,[])
+        pass
+
+    def test_parse_D0010_bad_mpan(self):
+        # Receive D0010 flow file with bad or malformed mpan
+        tmp_file_content = DataFlowFactory().get_data_flow("D0010")
+        file_content = []
+        for row in tmp_file_content:
+            if row[0:3]=="026":
+                row = row[0:3] + "|1234|other_problem|"
+            file_content.append(row)
+        
+        flow_parser = DataFlowParserFactory().get_parser(file_content)        
+        flow_parser = D0010Parser()
+        data = flow_parser.process(file_content)
+        
+        self.assertListEqual(data,[])
+        pass
+
+        # Receive D0010 flow file with not mpan
+        tmp_file_content = DataFlowFactory().get_data_flow("D0010")
+        file_content = []
+        for row in tmp_file_content:
+            if row[0:3]!="026":
+                file_content.append(row)
+        
+        flow_parser = DataFlowParserFactory().get_parser(file_content)        
+        flow_parser = D0010Parser()
+        data = flow_parser.process(file_content)
+        
+        self.assertListEqual(data,[])
+        pass
 
 class DataFlowParserFactoryTest(TestCase):
     def test_get_parser_D0010(self):
@@ -14,15 +161,6 @@ class DataFlowParserFactoryTest(TestCase):
         self.assertIsInstance(flow_parser,BaseDataFlowParser)
         self.assertIsInstance(flow_parser,D0010Parser)
         
-        pass
-
-    def test_parse_D0010(self):
-        # Recevie D0010 flow file, parse content 
-        file_content = DataFlowFactory().get_data_flow("D0010")
-        
-        flow_parser = D0010Parser()
-        
-        flow_parser.process(file_content)
         pass
 
     def test_get_parser_basic(self):
