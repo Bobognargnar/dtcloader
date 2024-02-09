@@ -12,13 +12,12 @@ class File(models.Model):
         flow (str): Flow file type (e.g. D0010, D0009)
     """
     file = models.FileField(upload_to='uploads/', unique=True)
-    flow = models.CharField(max_length=5)
 
 class Meter(models.Model):
     serial = models.CharField(max_length=10)
 
 class Mpan(models.Model):
-    core = models.IntegerField(max_length=13)
+    core = models.IntegerField()
 
 class Reading(models.Model):
     """Models meter readings from any flow source.
