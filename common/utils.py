@@ -45,7 +45,10 @@ class D0010Parser(BaseDataFlowParser):
         return {"mpan":None,"meter":None,"value":None,"date":None}
 
     def process(self,content):
-        """Parses D0010 file, extracts relevant informations and stores them in the database    """
+        """Parses D0010 file, extracts relevant informations and stores them in the database    
+        
+        If data entry does not match model, we skip it.
+        """
 
         res = []
         header = content[0]
@@ -59,11 +62,18 @@ class D0010Parser(BaseDataFlowParser):
 
             # MPAN Cores
             if row[0]=='026':
-                reading.set_mpan(row[1])
+                if reading.validate_mpan(row):
+                    reading.set_mpan(row[1])
+                else: print(f"mpan {row} not valid")
             if row[0]=='028':
-                reading.set_meter(row[1])
+                if reading.validate_meter(row):
+                    reading.set_meter(row[1])
+                else: print(f"meter {row} not valid")
             if row[0]=='030':
-                reading.set_reading(date=row[2], value=row[3])
+                # Bad reading is skipped
+                if reading.validate_reading(row):
+                    reading.set_reading(date=row[2], value=row[3])
+                else: print("reading not valid")
                 
             if reading.is_ready():
                 reading_dict = reading.get_reading()
@@ -71,11 +81,6 @@ class D0010Parser(BaseDataFlowParser):
                 res.append(reading_dict)
 
         return res
-
-
-
-
-
 
 class DataFlowParserFactory():
     """Helper class for reading and parsing generic DTC Flow files
@@ -112,6 +117,7 @@ class Reading():
         self._meter = None
         self._value = None
         self._date = None
+        self._raw_date = None
 
     def set_mpan(self,core):
         self.reset()
@@ -120,13 +126,47 @@ class Reading():
     def set_meter(self,meter):
         self._value = None
         self._date = None
+        self._raw_date = None
         self._meter = meter
-    
+
     def set_reading(self,date,value):
         self._value = value
 
         # The documentations gave no indication of time zone! I'm assuming UTC time.
         self._date = dt.strptime(date, "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
+
+        self._raw_date = date
+
+    def validate_mpan(self,row):
+        
+        # Min lenght of the reading row
+        if len(row)!=4 or len(row[1])!=13:
+            return False
+        
+        return True
+
+    def validate_meter(self,row):
+        
+        # Min lenght of the reading row
+        if len(row)!=4 or len(row[1])>10 or len(row[1])==0:
+            return False
+        
+        return True
+
+    def validate_reading(self,row):
+        
+        # Min lenght of the reading row
+        if (len(row)<4):
+            return False
+
+        # Try to parse date field and reading row to confirm quality
+        try: 
+            dt.strptime(row[2], "%Y%m%d%H%M%S")
+            float(row[3])
+        except:
+            return False
+        
+        return True
 
     def is_ready(self):
         if (self._meter and self._mpan and self._date and self._value):
@@ -134,7 +174,7 @@ class Reading():
         return False
 
     def get_reading(self):
-        res = {"mpan":self._mpan,"meter":self._meter,"value":self._value,"date":self._date}
+        res = {"mpan":self._mpan,"meter":self._meter,"value":self._value,"date":self._date, "raw_date":self._raw_date}
         return res
 
     
