@@ -61,7 +61,7 @@ def trigger_file_processing(sender, instance, created, **kwargs):
                 }
             reading, created = Reading.objects.update_or_create(defaults=values, **values)
             if created: 
-                print(f"New Reading added: {values["reading"]} {values["date"].strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"New Reading added: {values['reading']} {values['date'].strftime('%Y-%m-%d %H:%M:%S')}")
         
 
         print()
