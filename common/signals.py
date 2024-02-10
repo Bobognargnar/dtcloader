@@ -25,14 +25,6 @@ def file_insert_validation(sender, instance, **kwargs):
         if extension != ".uff": 
             raise IntegrityError("Unsupported file extension. Aborting save operation.")
         
-        file_content = []
-        with default_storage.open(instance.file.name, 'rb') as file:
-            header = file.readline().decode().replace("\n","")
-            file_content.append(header)
-        
-
-        if not DataFlowParserFactory().is_valid(file_content):
-            raise IntegrityError("Unsupported file content. Aborting save operation.")
     except Exception:
         raise
     
