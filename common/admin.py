@@ -10,11 +10,9 @@ class FilteringAdmin(admin.ModelAdmin):
     #list_display = ["reading","date","file_id","meter_id","mpan_id"]
     search_fields  = ["reading"]
     list_filter = ["reading"]
-    search_help_text = "Seach here using the following fields in the database:"
-    for searchField in search_fields:
-        search_help_text += Reading._meta.get_field(searchField).verbose_name
-
-    @admin.display(ordering='file__filename', description='File')
+    search_help_text = "Seach here using the following fields in the database: meter, mpan, filename"
+    
+    @admin.display(ordering='file__filename', description='Filename')
     def get_file(self, obj):
         return obj.file_id.filename
 
@@ -22,7 +20,7 @@ class FilteringAdmin(admin.ModelAdmin):
     def get_meter(self, obj):
         return obj.meter_id.serial
 
-    @admin.display(ordering='mpan__core', description='Mpan')
+    @admin.display(ordering='mpan__core', description='MPAN')
     def get_mpan(self, obj):
         return obj.mpan_id.core
 
@@ -42,6 +40,8 @@ class FilteringAdmin(admin.ModelAdmin):
                     new_queryset = queryset.filter(meter_id__serial=value)
                 elif field_name == "mpan":
                     new_queryset = queryset.filter(mpan_id__core=value)
+                elif field_name == "filename":
+                    new_queryset = queryset.filter(file_id__filename=value)
                 else:
                     new_queryset = getattr(queryset, 'filter')(**{field_name: value})
                 
