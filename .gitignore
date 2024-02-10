@@ -67,7 +67,6 @@ db.sqlite3-journal
 
 # Uploads
 uploads/
-*.uff
 
 # Flask stuff:
 instance/
