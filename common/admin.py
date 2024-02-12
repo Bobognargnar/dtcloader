@@ -8,7 +8,6 @@ from traceback import format_exc
 
 class FilteringAdmin(admin.ModelAdmin):
     list_display = ["reading","date","get_file","get_meter","get_mpan"]
-    #list_display = ["reading","date","file_id","meter_id","mpan_id"]
     search_fields  = ["reading"]
     list_filter = ["reading"]
     search_help_text = "Seach here using the following fields in the database: meter, mpan, filename"

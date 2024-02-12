@@ -123,7 +123,9 @@ python .\manage.py test
 I had limited time to prepare extensive testing, but I prepared some basic classes:
 * _DataFlowParserFactoryTest_: Tests the parser factory that provide the appropriate parser according to the file header;
 * _D0010Test_: Tests parsing of D0010 files in various scenarios;
-* _FileUploadTest_: Tests uploading versions of the example file in various scenarios;
+* _FileUploadTest_: Tests populating the File model with the example file in various scenarios;
+* _FilteringAdminTest_: Tests the search admin functions of the Reading model
+* _CommandTest_: Tests upload command functions for one or more files
 
 ## Resources
 

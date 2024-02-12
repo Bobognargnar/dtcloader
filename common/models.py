@@ -9,7 +9,7 @@ class File(models.Model):
 
     Attributes:
         file (file): Uploaded flow file
-        flow (str): Flow file type (e.g. D0010, D0009)
+        filename (str): Filename string with extension
     """
     id = models.AutoField(primary_key=True)
     file = models.FileField(upload_to='uploads/', unique=True)
@@ -29,7 +29,7 @@ class Reading(models.Model):
     a specific MPAN and a specific meter.
 
     Attributes:
-        value (float): Numerical value of the reading
+        reading (float): Numerical value of the reading
         date (datetime): Date of the reading
         file_id: Reference to File table. The file of origin of this reading.
         mpan_id: Reference to Mpan table. The MPAN associated with this reading.

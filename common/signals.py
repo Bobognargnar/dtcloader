@@ -32,6 +32,8 @@ def file_insert_validation(sender, instance, **kwargs):
 
 @receiver(post_save, sender=File)
 def trigger_file_processing(sender, instance, created, **kwargs):
+    """Populate model with DTC information parsed from file
+    """
     if created:
 
         with default_storage.open(instance.file.name, 'rb') as file:
@@ -41,6 +43,8 @@ def trigger_file_processing(sender, instance, created, **kwargs):
         readings = flow_parser.process(file_content)
 
         for reading_dict in readings:
+            # TODO: add other DTC file support
+
             # Populate table MPAN
             values = {'core': reading_dict["mpan"]}
             mpan, created = Mpan.objects.update_or_create(defaults=values, **values)
@@ -71,7 +75,7 @@ def trigger_file_processing(sender, instance, created, **kwargs):
 @receiver(post_delete, sender=File)
 def upload_cleanup(sender, instance, **kwargs):
     # Remove file from upload folder after deletion.
-    # ! File removal does not work due to file lock. I expect it to work on unix environments.
+    # ! File removal does not work due to file lock on windows. I expect it to work on unix environments.
     try:
         if os.path.exists(instance.file.file.name):
             os.remove(instance.file.file.name)
