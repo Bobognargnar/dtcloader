@@ -1,7 +1,9 @@
 from django.test import TestCase
-from common.models import File
+from common.models import File,Reading
+from common.admin import FilteringAdmin
 from common.utils import DataFlowParserFactory,BaseDataFlowParser,D0010Parser
 from random import randint
+import random
 import uuid
 import os
 import shutil
@@ -10,6 +12,109 @@ from common.management.commands.upload import Command
 
 test_file = "./DTC5259515123502080915D0010.uff"
 file_name = "DTC5259515123502080915D0010.uff"
+
+class FilteringAdminTest(TestCase):
+
+    def __rnd_sep(self):
+        # Random separators in search terms
+        sep = random.choice(["","\t"])
+        return sep * random.randint(1,10)
+
+    def test_searchMeter_ok(self):
+        # Search existing meter
+
+        Command().handle(test_file)
+        fa = FilteringAdmin(Reading,None)
+        qs = Reading.objects.all()
+
+        value = "D03A 09936"
+        expected = qs.filter(meter_id__serial=value)
+        search = f"{self.__rnd_sep()}meter{self.__rnd_sep()}={self.__rnd_sep()}{value}{self.__rnd_sep()}"
+        result,_ = fa.get_search_results(request=None, queryset=qs, search_term=search)
+
+
+        self.assertEqual(len(expected),len(result & expected),msg=f"Test failed for search: {search}")
+        self.assertEqual(len(result),len(result & expected),msg=f"Test failed for search: {search}")
+
+    def test_searchMeter_ko(self):
+        # Search non existing meter
+
+        Command().handle(test_file)
+        fa = FilteringAdmin(Reading,None)
+        qs = Reading.objects.all()
+
+        value = "D03A FANTASY"
+        expected = qs.filter(meter_id__serial=value)
+        search = f"{self.__rnd_sep()}meter{self.__rnd_sep()}={self.__rnd_sep()}{value}{self.__rnd_sep()}"
+        result,_ = fa.get_search_results(request=None, queryset=qs, search_term=search)
+
+
+        self.assertEqual(len(expected),len(result & expected),msg=f"Test failed for search: {search}")
+        self.assertEqual(len(result),len(result & expected),msg=f"Test failed for search: {search}")
+
+    def test_searchMeter_ok(self):
+        # Search existing mpan
+
+        Command().handle(test_file)
+        fa = FilteringAdmin(Reading,None)
+        qs = Reading.objects.all()
+
+        value = "1200022664056"
+        expected = qs.filter(mpan_id__core=value)
+        search = f"{self.__rnd_sep()}mpan{self.__rnd_sep()}={self.__rnd_sep()}{value}{self.__rnd_sep()}"
+        result,_ = fa.get_search_results(request=None, queryset=qs, search_term=search)
+
+
+        self.assertEqual(len(expected),len(result & expected),msg=f"Test failed for search: {search}")
+        self.assertEqual(len(result),len(result & expected),msg=f"Test failed for search: {search}")
+
+    def test_searchMeter_ko(self):
+        # Search not existing mpan
+
+        Command().handle(test_file)
+        fa = FilteringAdmin(Reading,None)
+        qs = Reading.objects.all()
+
+        value = "666666666666666"
+        expected = qs.filter(mpan_id__core=value)
+        search = f"{self.__rnd_sep()}mpan{self.__rnd_sep()}={self.__rnd_sep()}{value}{self.__rnd_sep()}"
+        result,_ = fa.get_search_results(request=None, queryset=qs, search_term=search)
+
+
+        self.assertEqual(len(expected),len(result & expected),msg=f"Test failed for search: {search}")
+        self.assertEqual(len(result),len(result & expected),msg=f"Test failed for search: {search}")
+
+    def test_searchMeter_ok(self):
+        # Search existing file
+
+        Command().handle(test_file)
+        fa = FilteringAdmin(Reading,None)
+        qs = Reading.objects.all()
+
+        value = "DTC5259515123502080915D0010.uff"
+        expected = qs.filter(file_id__filename=value)
+        search = f"{self.__rnd_sep()}filename{self.__rnd_sep()}={self.__rnd_sep()}{value}{self.__rnd_sep()}"
+        result,_ = fa.get_search_results(request=None, queryset=qs, search_term=search)
+
+        self.assertEqual(len(expected),len(result & expected),msg=f"Test failed for search: {search}")
+        self.assertEqual(len(result),len(result & expected),msg=f"Test failed for search: {search}")
+
+    def test_searchMeter_ok(self):
+        # Search not existing file
+
+        Command().handle(test_file)
+        fa = FilteringAdmin(Reading,None)
+        qs = Reading.objects.all()
+
+        value = "fantasy_file.uff"
+        expected = qs.filter(file_id__filename=value)
+        search = f"filename{self.__rnd_sep()}={self.__rnd_sep()}{value}{self.__rnd_sep()}"
+        result,_ = fa.get_search_results(request=None, queryset=qs, search_term=search)
+
+        self.assertEqual(len(expected),len(result & expected),msg=f"Test failed for search: {search}")
+        self.assertEqual(len(result),len(result & expected),msg=f"Test failed for search: {search}")
+
+
 
 class CommandTest(TestCase):
 

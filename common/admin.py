@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import QuerySet
 
 # Register your models here.
 from .models import Reading,File,Mpan,Meter
@@ -26,15 +27,20 @@ class FilteringAdmin(admin.ModelAdmin):
 
     def get_search_results(self, request, queryset, search_term):
         # I spent too much time trying to make the basic search work.
-        # I'm writing my own, with just support for MPAN and meter serial number
+        # I'm writing my own, with just support for filename, MPAN and meter serial number
         try:
-            pattern = r'(\w+)\s*([=><!]+)\s*(\w+)(?:\s*([&|])|$)'
+            pattern = r'(\w+)\s*([=><!]+)\s*(?:("[^"]*")|(\w+\.\w+))(?:\s*([&|])|$)'
             regex = re.compile(pattern)
             matches = regex.findall(search_term)
+            print(search_term)
+
+            if len(search_term)>0 and len(matches) == 0: 
+                return Reading.objects.none(), False
 
             for match in matches:
+                match = [m for m in match if m!='']
                 print(match)
-                field_name, operator, value, conjunction = match[0:4]
+                field_name, operator, value = match[0:3]
 
                 if field_name == "meter":
                     new_queryset = queryset.filter(meter_id__serial=value)
@@ -47,6 +53,7 @@ class FilteringAdmin(admin.ModelAdmin):
                 
                 queryset = new_queryset
 
+                # TODO: add support for boolean algebra
                 # if conjunction == '&':
                 #     queryset = queryset.union(new_queryset)
                 # if conjunction == '|':
