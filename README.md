@@ -1,4 +1,4 @@
-# dtc-loader
+# Octopus Energy technical challenge - Fabrizio La Rosa
 Generic Data Transfer Catalogue Loader 
 
 This project should work as a platform to ingest and browse data flow files from the DTC catalogue.
