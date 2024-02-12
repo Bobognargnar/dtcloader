@@ -8,7 +8,7 @@ import shutil
 from django.db import IntegrityError
 from common.management.commands.upload import Command
 
-test_file = ".\\DTC5259515123502080915D0010.uff"
+test_file = "./DTC5259515123502080915D0010.uff"
 file_name = "DTC5259515123502080915D0010.uff"
 
 class CommandTest(TestCase):
@@ -20,14 +20,14 @@ class CommandTest(TestCase):
 
     def test_upload_multiple(self):
         # Upload one file and one missing file
-        Command().handle(test_file, ".\\missing.uff")
+        Command().handle(test_file, "./missing.uff")
         self.assertTrue(File.objects.filter(filename=file_name).exists())
-        self.assertFalse(File.objects.filter(filename=".\\missing.uff").exists())
+        self.assertFalse(File.objects.filter(filename="./missing.uff").exists())
 
     def test_command_missing(self):
         # Command with missing file
-        Command().handle(".\\missing.uff")
-        self.assertFalse(File.objects.filter(filename=".\\missing.uff").exists())
+        Command().handle("./missing.uff")
+        self.assertFalse(File.objects.filter(filename="./missing.uff").exists())
 
 class FileUploadTest(TestCase):
     def test_upload(self):
@@ -38,14 +38,14 @@ class FileUploadTest(TestCase):
 
     def test_upload_missing(self):
         with self.assertRaises(FileNotFoundError) as context:
-            file = ".\\fantasy.uff"
+            file = "./fantasy.uff"
             file_instance = File(filename = file_name )
             file_instance.file.save(os.path.basename(file), open(file, 'rb'))
         pass
 
     def test_upload_invalid_extension(self):
 
-        file = ".\\demo.bad"
+        file = "./demo.bad"
         if os.path.exists(file): os.remove(file)
 
         shutil.copy2(test_file, file)
@@ -58,7 +58,7 @@ class FileUploadTest(TestCase):
 
     def test_upload_invalid_flow(self):
 
-        file = ".\\demo.uff"
+        file = "./demo.uff"
         if os.path.exists(file): os.remove(file)
 
         shutil.copy2(test_file, file)
