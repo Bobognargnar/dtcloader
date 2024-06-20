@@ -1,5 +1,4 @@
-# Octopus Energy technical challenge - Fabrizio La Rosa
-Generic Data Transfer Catalogue Loader 
+# Generic Data Transfer Catalogue Loader 
 
 This project should work as a platform to ingest and browse data flow files from the DTC catalogue.
 
@@ -137,9 +136,3 @@ Documentation on the flow files headers and footers was somewhat difficult to ac
     * https://gist.github.com/codeinthehole/de956088bab2a9168c7647fdf1be7cc5
 3. The header and footer specifications for the flow files:
     * https://bscdocs.elexon.co.uk/user-requirements-specifications/parms-user-requirements-specification#appendix-a--data-file-formats
-
-## Final comments
-
-I had a lot of fun with this project, and learned a bit of django along the way.
-
-Any feedback would be much appreciated!
